@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Weather App</title>
+  </head>
+  <body>
+    <div id="app">
+      <div class="main-menu">
+        <div class="main-menu__heading">
+          Weather <button class="main-menu__edit">Bearbeiten</button>
+        </div>
+        <div class="main-menu__search-bar">
+          <input
+            type="text"
+            class="main-menu__seach-input"
+            placeholder="Search City..."
+          />
+        </div>
+        <div class="main-menu__cities-list">
+          <div class="city-wrapper">
+            <div class="city">
+              <div class="city__left-column">
+                <h2 class="city__name">Los Angeles</h2>
+                <div class="city__country">USA</div>
+                <div class="city__condition">Rain</div>
+              </div>
+              <div class="city__right-column">
+                <div class="city__temperature">15°</div>
+                <div class="city__min-max-temperature">H:20° T: 12°</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

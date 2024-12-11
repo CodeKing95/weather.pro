@@ -1,0 +1,74 @@
+.main-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+
+  &__heading {
+    font-size: 3rem;
+    font-weight: 300;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-shadow: $text-shadow;
+  }
+
+  &__search-bar {
+    width: 100%;
+  }
+
+  &__search-input {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 1rem;
+    border-radius: $border-radius;
+    border: none;
+  }
+
+  &__cities-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+.city-wrapper {
+}
+
+.city {
+  @include card();
+  display: grid;
+  grid-template-columns: max-content max-content;
+  justify-content: space-between;
+  cursor: pointer;
+  background: var(--condition-image);
+  background-size: cover;
+  background-position: 50% 25%;
+  text-shadow: $text-shadow;
+
+  &__name {
+    font-weight: 400;
+    font-size: 1.5rem;
+    max-width: 200px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  &__condition {
+    margin-top: 2rem;
+  }
+
+  &__temperature {
+    font-size: 2.5rem;
+    font-weight: 300;
+    text-align: right;
+  }
+
+  &__right-column {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+}
