@@ -13,6 +13,17 @@
     text-shadow: $text-shadow;
   }
 
+  &__edit {
+    background-color: transparent;
+    border: none;
+    color: $text-color;
+    font-size: 1rem;
+    font-weight: 700;
+    text-shadow: $text-shadow;
+    cursor: pointer;
+    margin-top: 0.5rem;
+  }
+
   &__search-bar {
     width: 100%;
   }
@@ -26,13 +37,62 @@
     border: none;
   }
 
+  &__search-resulst {
+    position: absolute;
+    z-index: 2;
+    transform: translateZ(100px);
+    left: 0;
+    right: 0;
+    background-color: $elevation;
+    border-bottom-right-radius: $border-radius;
+    border-bottom-left-radius: $border-radius;
+
+    &--hidden {
+      display: none;
+    }
+
+    .search-result {
+      padding: 0.75rem;
+      border-bottom: $border;
+      cursor: pointer;
+
+      &:last-child {
+        border: none;
+      }
+
+      &:hover {
+        background-color: $elevation-2;
+      }
+
+      &__name {
+        font-size: 1.25rem;
+        font-weight: 400;
+      }
+    }
+  }
+
   &__cities-list {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
   }
 }
+
 .city-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+
+  &__remove {
+    display: none;
+    width: 2rem;
+    color: lightgreen;
+    cursor: pointer;
+
+    &--show {
+      display: block;
+    }
+  }
 }
 
 .city {

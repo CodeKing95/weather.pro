@@ -1,7 +1,12 @@
 import { loadDetailView } from "./detailView";
 import { rootElement } from "./main";
 import { renderLoadingScreen } from "./loading";
-import { getForecastWeather } from "./api";
+import {
+  getFavoriteCities,
+  getForecastWeather,
+  removeCityFromFavorites,
+  searchLocation,
+} from "./api";
 import { getConditionImagePath } from "./conditions";
 import { formatTemperature } from "./utils";
 
@@ -25,26 +30,37 @@ async function renderMainMenu() {
 function getMenuHeaderHtml() {
   return `
     
-        <div class="main-menu_heading">
-          Weather<button class="main-menu_edit">Bearbeiten</button>
+        <div class="main-menu__heading">
+          Weather<button class="main-menu__edit">Edit</button>
         </div>
-        <div class="main-menu_search-bar">
+        <div class="main-menu__search-bar">
           <input
             type="text"
-            class="main-menu_search-input"
+            class="main-menu__search-input"
             placeholder="Search City..."
-          />
+          />  
+          <div class="main-menu__search-results"></div>
         </div>
     
     `;
 }
 
+const removeIcon = `
+<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+</svg>
+`;
+
 async function getCityListHtml() {
-  const belovedCities = ["Bejing", "Toronto", "Cape Town"];
+  const favoriteCities = getFavoriteCities();
 
-  const belovedCityElements = [];
+  if (!favoriteCities || favoriteCities.length < 1) {
+    return "Not Saved a Favorite City.";
+  }
 
-  for (let city of belovedCities) {
+  const favoriteCityElements = [];
+
+  for (let city of favoriteCities) {
     const weatherData = await getForecastWeather(city, 1);
 
     const { location, current, forecast } = weatherData;
@@ -57,9 +73,11 @@ async function getCityListHtml() {
 
     const cityHtml = `
     <div class="city-wrapper">
+      <div class="city-wrapper__remove" data-city-id="${city}">${removeIcon}</div>
             <div
               class="city"
-              data-city-name="${city}"
+              data-city-name="${location.name}"
+              data-city-id="${city}"
               ${
                 conditionImage
                   ? `style="
@@ -87,26 +105,120 @@ async function getCityListHtml() {
     
     `;
 
-    belovedCityElements.push(cityHtml);
+    favoriteCityElements.push(cityHtml);
   }
 
-  const belovedCitiesHtml = belovedCityElements.join("");
+  const favoriteCitiesHtml = favoriteCityElements.join("");
   return `
      
         <div class="main-menu__cities-list">
-          ${belovedCitiesHtml}
+          ${favoriteCitiesHtml}
         </div>
       
     `;
 }
+function renderSearchResults(searchResults) {
+  const searchResultsElements = searchResults.map(
+    (result) => `
+    <div class="search-result" data-city-name="${result.name}" data-city-id="${result.id}">
+      <h3 class="search-result__name">${result.name}</h3>
+      <p class="search-result__country">${result.country}</p> 
+    </div>
+    `
+  );
+
+  const searchResultsHtml = searchResultsElements.join("");
+
+  const searchResultsDiv = document.querySelector(".main-menu__search-results");
+  searchResultsDiv.innerHTML = searchResultsHtml;
+}
+
+function registerSearchResultsEventListeners() {
+  const searchResults = document.querySelectorAll(".search-result");
+
+  searchResults.forEach((searchResults) => {
+    searchResults.addEventListener("click", () => {
+      const cityName = searchResults.getAttribute("data-city-name");
+      const cityId = searchResults.getAttribute("data-city-id");
+      loadDetailView(cityName, cityId);
+    });
+  });
+}
+
+function bodyClickHandler(e) {
+  const searchwrapper = document.querySelector(".main-menu__search-bar");
+
+  if (!searchwrapper) {
+    document.removeEventListener("click", bodyClickHandler);
+    return;
+  }
+
+  if (!searchwrapper.contains(e.target)) {
+    const searchResults = document.querySelector(".main-menu__search-results");
+    searchResults.classList.add("main-menu__search-results--hidden");
+  }
+}
 
 function registerEventListeners() {
+  const editButton = document.querySelector(".main-menu__edit");
+  const removeButtons = document.querySelectorAll(".city-wrapper__remove");
+
+  removeButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      removeCityFromFavorites(btn.getAttribute("data-city-id"));
+      btn.parentElement.remove();
+    });
+  });
+
+  editButton.addEventListener("click", () => {
+    const EDIT_ATTRIBUTE = "data-edit-mode";
+
+    if (!editButton.getAttribute(EDIT_ATTRIBUTE)) {
+      editButton.setAttribute(EDIT_ATTRIBUTE, "true");
+      editButton.textContent = "done";
+      removeButtons.forEach((btn) => {
+        btn.classList.add("city-wrapper__remove--show");
+      });
+    } else {
+      editButton.removeAttribute(EDIT_ATTRIBUTE);
+      editButton.textContent = "edit";
+
+      removeButtons.forEach((btn) => {
+        btn.classList.remove("city-wrapper__remove--show");
+      });
+    }
+  });
+
+  const searchBar = document.querySelector(".main-menu__search-input");
+
+  searchBar.addEventListener("input", async (e) => {
+    const q = e.target.value;
+
+    let searchResults = [];
+
+    if (q.length > 1) {
+      searchResults = await searchLocation(q);
+      console.log(searchResults);
+    }
+
+    renderSearchResults(searchResults);
+    registerSearchResultsEventListeners();
+  });
+
+  document.addEventListener("click", bodyClickHandler);
+
+  searchBar.addEventListener("focusin", () => {
+    const searchResults = document.querySelector(".main-menu__search-results");
+    searchResults.classList.add("main-menu__search-results--hidden");
+  });
+
   const cities = document.querySelectorAll(".city");
 
   cities.forEach((city) => {
     city.addEventListener("click", () => {
       const cityName = city.getAttribute("data-city-name");
-      loadDetailView(cityName);
+      const cityId = city.getAttribute("data-city-id");
+      loadDetailView(cityName, cityId);
     });
   });
 }

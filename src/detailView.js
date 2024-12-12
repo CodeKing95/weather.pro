@@ -1,5 +1,9 @@
 import { rootElement } from "./main";
-import { getForecastWeather } from "./api";
+import {
+  getFavoriteCities,
+  getForecastWeather,
+  saveCityAsFavorite,
+} from "./api";
 import {
   formatHourlyTime,
   formatTemperature,
@@ -11,14 +15,15 @@ import { renderLoadingScreen } from "./loading";
 import { getConditionImagePath } from "./conditions";
 import { loadMainMenu } from "./mainMenu";
 
-export async function loadDetailView(cityName) {
+export async function loadDetailView(cityName, cityId) {
   renderLoadingScreen("Load Weather for " + cityName + "...");
-  const weatherData = await getForecastWeather(cityName);
-  renderDetailView(weatherData);
-  registerEventListeners();
+
+  const weatherData = await getForecastWeather(cityId);
+  renderDetailView(weatherData, cityId);
+  registerEventListeners(cityId);
 }
 
-function renderDetailView(weatherData) {
+function renderDetailView(weatherData, cityId) {
   const { location, current, forecast } = weatherData;
   const currentDay = forecast.forecastday[0];
 
@@ -32,8 +37,10 @@ function renderDetailView(weatherData) {
     rootElement.classList.add("show-background");
   }
 
+  const isFavorite = getFavoriteCities().find((city) => city === cityId);
+
   rootElement.innerHTML =
-    getActionBarHtml() +
+    getActionBarHtml(!isFavorite) +
     getHeaderHtml(
       location.name,
       formatTemperature(current.temp_c),
@@ -58,16 +65,25 @@ function renderDetailView(weatherData) {
     );
 }
 
-function getActionBarHtml() {
+function getActionBarHtml(showFavoritesButton = true) {
   const backIcon = `
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
   <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
-</svg>
-`;
+</svg>`;
+
+  const favoriteIcon = `
+<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
+</svg>`;
 
   return `
   <div class="action-bar">
     <div class="action-bar__back">${backIcon}</div>
+    ${
+      showFavoritesButton
+        ? `<div class="action-bar__favorite">${favoriteIcon}</div>`
+        : ""
+    }
   </div>
   `;
 }
@@ -178,7 +194,7 @@ function getMiniStatsHtml(
   return `
   <div class="mini-stats">
         <div class="mini-stat">
-          <div class="mini-stat__heading">Feuchtigkeit</div>
+          <div class="mini-stat__heading">Humidity</div>
           <div class="mini-stat__value">${humidity}</div>
         </div>
           <div class="mini-stat">
@@ -186,31 +202,38 @@ function getMiniStatsHtml(
           <div class="mini-stat__value">${feelsLike}</div>
         </div>
           <div class="mini-stat">
-          <div class="mini-stat__heading">Feuchtigkeit</div>
+          <div class="mini-stat__heading">Sunrise</div>
           <div class="mini-stat__value">${formatToMilitaryTime(
             sunrise
           )}Uhr</div>
         </div>
           <div class="mini-stat">
-          <div class="mini-stat__heading">Feuchtigkeit</div>
+          <div class="mini-stat__heading">Sunset</div>
           <div class="mini-stat__value">${formatToMilitaryTime(sunset)}</div>
         </div>
           <div class="mini-stat">
-          <div class="mini-stat__heading">Feuchtigkeit</div>
+          <div class="mini-stat__heading">Precipitation</div>
           <div class="mini-stat__value">${precip}mm</div>
         </div>
           <div class="mini-stat">
-          <div class="mini-stat__heading">Feuchtigkeit</div>
+          <div class="mini-stat__heading">UV-Index</div>
           <div class="mini-stat__value">${uvIndex}</div>
         </div>
       </div>
     `;
 }
 
-function registerEventListeners() {
+function registerEventListeners(cityId) {
   const backButton = document.querySelector(".action-bar__back");
 
   backButton.addEventListener("click", () => {
     loadMainMenu();
+  });
+
+  const favoriteButton = document.querySelector(".action-bar__favorite");
+
+  favoriteButton?.addEventListener("click", () => {
+    saveCityAsFavorite(cityId);
+    favoriteButton.remove();
   });
 }

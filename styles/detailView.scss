@@ -2,7 +2,8 @@
   display: flex;
   justify-content: space-between;
 
-  &__back {
+  &__back,
+  &__favorite {
     width: 2.5rem;
     filter: drop-shadow($text-shadow);
     cursor: pointer;
